@@ -324,7 +324,7 @@ export default function Sidebar({ children }) {
                                         fontWeight: "bold",
                                         fontSize: "1rem",
                                         '& .MuiAvatar-img': {
-                                            objectFit: 'contain',  // prevent cropping
+                                            objectFit: 'contain',
                                             width: '100%',
                                             height: '100%',
                                         },
