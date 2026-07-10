@@ -1,10 +1,16 @@
-import React from 'react';
-import ThemeModeProvider from '@/context/ThemeModeProvider';
-import {StorageProvider} from "@/context/StorageContext";
+import packageJson from '../package.json'
+import React from 'react'
+import ThemeModeProvider from '@/context/ThemeModeProvider'
+import { StorageProvider } from "@/context/StorageContext"
+
+const PROJECT_NAME = packageJson.name
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
 
 export const metadata = {
-    title: 'Retirement Calculator',
-    description: 'US Military Pay and Retirement Calculator',
+    title: PROJECT_NAME,
+    description: `${PROJECT_NAME} - US Military Pay and Retirement Calculator`,
     icons: {
         icon: [
             { url: '/icon/icon0.svg', type: 'image/svg+xml' },
@@ -15,9 +21,9 @@ export const metadata = {
     },
     manifest: '/icon/manifest.json',
     appleWebApp: {
-        title: 'Retirement Calculator',
+        title: PROJECT_NAME,
     },
-};
+}
 
 export default function RootLayout({ children }) {
     return (
@@ -30,5 +36,5 @@ export default function RootLayout({ children }) {
                 </ThemeModeProvider>
             </body>
         </html>
-    );
+    )
 }
