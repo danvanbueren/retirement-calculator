@@ -2,6 +2,7 @@ import packageJson from '../package.json'
 import React from 'react'
 import ThemeModeProvider from '@/context/ThemeModeProvider'
 import { StorageProvider } from "@/context/StorageContext"
+import { Analytics } from "@vercel/analytics/next"
 
 const PROJECT_NAME = packageJson.name
     .split('-')
@@ -33,6 +34,7 @@ export default function RootLayout({ children }) {
                     <StorageProvider>
                         {children}
                     </StorageProvider>
+                    <Analytics />
                 </ThemeModeProvider>
             </body>
         </html>
