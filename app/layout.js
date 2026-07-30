@@ -1,3 +1,4 @@
+import './globals.css'
 import packageJson from '../package.json'
 import React from 'react'
 import ThemeModeProvider from '@/context/ThemeModeProvider'
@@ -29,7 +30,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
     return (
         <html lang="en" suppressHydrationWarning>
-            <body>
+            <body suppressHydrationWarning>
                 <ThemeModeProvider>
                     <StorageProvider>
                         {children}

@@ -461,7 +461,7 @@ export default function TimelineScrubber({ items = [], monthlyTimeline = [] }) {
                             >
                                 {item.type === 'promotion' ? (
                                     <Avatar
-                                        variant="square"
+                                        variant="rounded"
                                         src={item.insigniaUrl}
                                         alt={item.grade}
                                         slotProps={{
@@ -470,9 +470,13 @@ export default function TimelineScrubber({ items = [], monthlyTimeline = [] }) {
                                             }
                                         }}
                                         sx={{
-                                            width: 18,
-                                            height: 18,
-                                            bgcolor: 'transparent',
+                                            width: item.insigniaUrl ? 18 : 22,
+                                            height: item.insigniaUrl ? 18 : 16,
+                                            fontSize: '0.55rem',
+                                            fontWeight: 'bold',
+                                            bgcolor: item.insigniaUrl ? 'transparent' : 'primary.main',
+                                            color: item.insigniaUrl ? 'text.primary' : 'primary.contrastText',
+                                            borderRadius: item.insigniaUrl ? 0 : 0.75,
                                             pointerEvents: 'none',
                                             userSelect: 'none',
                                             '& .MuiAvatar-img': {

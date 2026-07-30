@@ -42,25 +42,6 @@ export default function ThemeModeProvider({ children }) {
                 secondary: { main: '#9c27b0' },
             },
             shape: { borderRadius: 12 },
-            components: {
-                MuiCssBaseline: {
-                    styleOverrides: {
-                        'html, body': {
-                            scrollbarWidth: 'none', /* Firefox */
-                            msOverflowStyle: 'none', /* IE and Edge */
-                        },
-                        'html::-webkit-scrollbar, body::-webkit-scrollbar, ::-webkit-scrollbar': {
-                            display: 'none', /* Chrome, Safari, Opera */
-                            width: 0,
-                            height: 0,
-                        },
-                        '*': {
-                            scrollbarWidth: 'none',
-                            msOverflowStyle: 'none',
-                        },
-                    },
-                },
-            },
         });
     }, [mode]);
 
