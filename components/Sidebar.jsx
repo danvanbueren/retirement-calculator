@@ -5,7 +5,6 @@ import {
     Box,
     Divider,
     Typography,
-    CssBaseline,
     Toolbar,
     MenuItem,
     Select,
@@ -159,8 +158,6 @@ export default function Sidebar({ children }) {
 
     return (
         <Box sx={{ display: 'flex' }}>
-            <CssBaseline />
-
             <AppBar position="fixed" open={sidebarOpen}>
                 <Toolbar>
                     <Tooltip title="Open sidebar" placement="right" arrow>

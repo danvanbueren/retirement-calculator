@@ -2,7 +2,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
     Box, Grid, Paper, Typography, Divider, Avatar, Card, CardContent,
-    Accordion, AccordionSummary, AccordionDetails, Chip, Stack, Tooltip
+    Accordion, AccordionSummary, AccordionDetails, Chip, Stack, Tooltip,
+    Alert, AlertTitle
 } from '@mui/material';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
@@ -13,6 +14,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import MilitaryTechIcon from '@mui/icons-material/MilitaryTech';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import SecurityIcon from '@mui/icons-material/Security';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 import { useStorage } from '@/context/StorageContext';
 import { buildMonthlyTimeline, calcTimeInService, makeGetPay, formatDateShort, formatDateMonthYear, formatDateLongMonthYear } from '@/lib/payLogic';
@@ -51,9 +54,17 @@ export default function ChronologicalDataDisplay() {
         return calcTimeInService(start, end);
     }, [promotions]);
 
+    const isEligibleForRetirement = yearsOfService >= 20;
+    const yearsNeeded = Math.max(0, 20 - yearsOfService);
+
     const retirementPay = useMemo(
-        () => timeline.avgLast36 * yearsOfService * (retirementMultiplier ?? 0),
-        [timeline.avgLast36, yearsOfService, retirementMultiplier]
+        () => (isEligibleForRetirement ? timeline.avgLast36 * yearsOfService * (retirementMultiplier ?? 0) : 0),
+        [isEligibleForRetirement, timeline.avgLast36, yearsOfService, retirementMultiplier]
+    );
+
+    const projected20YrPay = useMemo(
+        () => timeline.avgLast36 * 20 * (retirementMultiplier ?? 0),
+        [timeline.avgLast36, retirementMultiplier]
     );
 
     // Group timeline entries by Year
@@ -137,24 +148,70 @@ export default function ChronologicalDataDisplay() {
                                 Comprehensive analysis of your estimated pension, career earnings, income replacement, and long-term lifetime retirement wealth.
                             </Typography>
 
+                            {/* Retirement Authorization & Eligibility Alert Banner */}
+                            {!isEligibleForRetirement ? (
+                                <Alert
+                                    severity="warning"
+                                    icon={<WarningAmberIcon fontSize="inherit" />}
+                                    sx={{
+                                        mb: 3,
+                                        borderRadius: 2,
+                                        border: '1px solid',
+                                        borderColor: 'warning.main',
+                                        bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(237, 108, 2, 0.15)' : 'rgba(237, 108, 2, 0.08)'
+                                    }}
+                                >
+                                    <AlertTitle sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
+                                        Not Authorized for Pension (&lt; 20 Years Active Service)
+                                    </AlertTitle>
+                                    Under 10 U.S.C. Chapter 71, active duty military members are <strong>not authorized to retire and take a pension</strong> until completing at least <strong>20 years of time in service (20 YOS)</strong>.
+                                    <Box sx={{ mt: 1, fontWeight: 'medium' }}>
+                                        • Current Active Duty Duration: <strong>{yearsOfService} Years</strong> ({totalMonths} Months)<br />
+                                        • Service Needed for Pension Eligibility: <strong>{yearsNeeded} More {yearsNeeded === 1 ? 'Year' : 'Years'}</strong> to reach 20 YOS.<br />
+                                        • Projected Pension at 20 YOS: <strong>{formatCurrency(projected20YrPay)} / mo</strong>
+                                    </Box>
+                                </Alert>
+                            ) : (
+                                <Alert
+                                    severity="success"
+                                    icon={<CheckCircleIcon fontSize="inherit" />}
+                                    sx={{
+                                        mb: 3,
+                                        borderRadius: 2,
+                                        border: '1px solid',
+                                        borderColor: 'success.main',
+                                        bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(46, 125, 50, 0.15)' : 'rgba(46, 125, 50, 0.08)'
+                                    }}
+                                >
+                                    <AlertTitle sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
+                                        Authorized for Active Duty Retirement ({yearsOfService} Years Service)
+                                    </AlertTitle>
+                                    You have completed at least 20 years of active duty service and qualify for immediate active duty retirement pension benefits.
+                                </Alert>
+                            )}
+
                             {/* Top KPI Cards Grid */}
                             <Grid container spacing={2} sx={{ mb: 4 }}>
                                 {/* Monthly Pension KPI */}
                                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                                    <Card elevation={3} sx={{ height: '100%', borderTop: 4, borderColor: 'primary.main' }}>
+                                    <Card elevation={3} sx={{ height: '100%', borderTop: 4, borderColor: isEligibleForRetirement ? 'primary.main' : 'warning.main' }}>
                                         <CardContent sx={{ p: 2.5 }}>
                                             <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                                                 <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 'bold', textTransform: 'uppercase' }}>
                                                     Monthly Pension
                                                 </Typography>
-                                                <AccountBalanceIcon color="primary" fontSize="small" />
+                                                <AccountBalanceIcon color={isEligibleForRetirement ? 'primary' : 'warning'} fontSize="small" />
                                             </Stack>
-                                            <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 0.5 }}>
+                                            <Typography variant="h4" sx={{ fontWeight: 'bold', color: isEligibleForRetirement ? 'primary.main' : 'warning.main', mb: 0.5 }}>
                                                 {formatCurrency(monthlyPension)}
                                             </Typography>
-                                            <Typography variant="body2" color="text.secondary">
-                                                Annual: <strong>{formatCurrency(annualPension)}</strong> / yr
-                                            </Typography>
+                                            <Box sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
+                                                {isEligibleForRetirement ? (
+                                                    <>Annual: <strong>{formatCurrency(annualPension)}</strong> / yr</>
+                                                ) : (
+                                                    <Chip label="Ineligible (<20 YOS)" size="small" color="warning" sx={{ fontWeight: 'bold', height: 20, fontSize: '0.65rem' }} />
+                                                )}
+                                            </Box>
                                         </CardContent>
                                     </Card>
                                 </Grid>
@@ -193,7 +250,7 @@ export default function ChronologicalDataDisplay() {
                                                 {pensionMultiplierPct}%
                                             </Typography>
                                             <Typography variant="body2" color="text.secondary">
-                                                {yearsOfService} YOS × {multiplierRatePct}% / yr
+                                                {isEligibleForRetirement ? `${yearsOfService} YOS × ${multiplierRatePct}% / yr` : `${yearsOfService} YOS (Requires 20 YOS)`}
                                             </Typography>
                                         </CardContent>
                                     </Card>
@@ -201,15 +258,15 @@ export default function ChronologicalDataDisplay() {
 
                                 {/* Equivalent Nest Egg KPI */}
                                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                                    <Card elevation={3} sx={{ height: '100%', borderTop: 4, borderColor: 'success.main' }}>
+                                    <Card elevation={3} sx={{ height: '100%', borderTop: 4, borderColor: isEligibleForRetirement ? 'success.main' : 'action.disabled' }}>
                                         <CardContent sx={{ p: 2.5 }}>
                                             <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                                                 <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 'bold', textTransform: 'uppercase' }}>
                                                     401(k) / IRA Value
                                                 </Typography>
-                                                <AttachMoneyIcon color="success" fontSize="small" />
+                                                <AttachMoneyIcon color={isEligibleForRetirement ? 'success' : 'action'} fontSize="small" />
                                             </Stack>
-                                            <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'success.main', mb: 0.5 }}>
+                                            <Typography variant="h4" sx={{ fontWeight: 'bold', color: isEligibleForRetirement ? 'success.main' : 'text.disabled', mb: 0.5 }}>
                                                 {formatCompactCurrency(nestEggEquivalent)}
                                             </Typography>
                                             <Typography variant="body2" color="text.secondary">
@@ -238,6 +295,23 @@ export default function ChronologicalDataDisplay() {
                                                 <Typography variant="body2" color="text.secondary">Retirement Plan:</Typography>
                                                 <Chip label={planName} size="small" color="primary" variant="outlined" />
                                             </Box>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <Typography variant="body2" color="text.secondary">Retirement Authorization:</Typography>
+                                                <Chip
+                                                    label={isEligibleForRetirement ? "Authorized (20+ YOS)" : "Not Authorized (<20 YOS)"}
+                                                    size="small"
+                                                    color={isEligibleForRetirement ? "success" : "warning"}
+                                                    sx={{ fontWeight: 'bold' }}
+                                                />
+                                            </Box>
+                                            {!isEligibleForRetirement && (
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <Typography variant="body2" color="text.secondary">Required Service Remaining:</Typography>
+                                                    <Typography variant="body2" color="warning.main" sx={{ fontWeight: 'bold' }}>
+                                                        {yearsNeeded} More {yearsNeeded === 1 ? 'Year' : 'Years'} Needed
+                                                    </Typography>
+                                                </Box>
+                                            )}
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Typography variant="body2" color="text.secondary">Active Duty Service Span:</Typography>
                                                 <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
@@ -272,9 +346,9 @@ export default function ChronologicalDataDisplay() {
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Typography variant="body2" color="text.secondary">Income Replacement Ratio:</Typography>
                                                 <Chip
-                                                    label={`${replacementRatio}% of final base pay`}
+                                                    label={isEligibleForRetirement ? `${replacementRatio}% of final base pay` : '0.0% (Ineligible)'}
                                                     size="small"
-                                                    color="success"
+                                                    color={isEligibleForRetirement ? 'success' : 'default'}
                                                     sx={{ fontWeight: 'bold' }}
                                                 />
                                             </Box>
