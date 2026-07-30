@@ -32,7 +32,7 @@ export const StorageProvider = ({ children }) => {
 
             setFirstLoad(false)
         }
-    })
+    }, [])
 
     useEffect(() => {
         if (!firstLoad)

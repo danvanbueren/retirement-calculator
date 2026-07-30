@@ -45,44 +45,18 @@ export default function ThemeModeProvider({ children }) {
             components: {
                 MuiCssBaseline: {
                     styleOverrides: {
-                        /* Chrome, Edge, Safari */
-                        '::-webkit-scrollbar': {
-                            width: 16,
-                            height: 16,
+                        'html, body': {
+                            scrollbarWidth: 'none', /* Firefox */
+                            msOverflowStyle: 'none', /* IE and Edge */
                         },
-                        '::-webkit-scrollbar-track': {
-                            background: 'transparent',
+                        'html::-webkit-scrollbar, body::-webkit-scrollbar, ::-webkit-scrollbar': {
+                            display: 'none', /* Chrome, Safari, Opera */
+                            width: 0,
+                            height: 0,
                         },
-                        '::-webkit-scrollbar-thumb': {
-                            backgroundColor: thumb,
-                            borderRadius: 12,
-                            transition: 'background-color 0.2s',
-                        },
-
-                        /* When hovering anywhere over the scrollable area */
-                        '*:hover::-webkit-scrollbar-thumb': {
-                            backgroundColor: thumbHoverArea,
-                        },
-
-                        /* When hovering directly over the thumb */
-                        '::-webkit-scrollbar-thumb:hover': {
-                            backgroundColor: thumbHoverDirect,
-                        },
-
-                        /* Scrollbar buttons (arrows at ends) */
-                        '::-webkit-scrollbar-button': {
-                            width: 16,
-                            height: 16,
-                            background: 'transparent',
-                        },
-
-                        /* Firefox */
                         '*': {
-                            scrollbarWidth: 'auto',
-                            scrollbarColor: `${thumb} transparent`,
-                        },
-                        '*:hover': {
-                            scrollbarColor: `${thumbHoverArea} transparent`,
+                            scrollbarWidth: 'none',
+                            msOverflowStyle: 'none',
                         },
                     },
                 },

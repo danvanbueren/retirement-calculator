@@ -22,6 +22,8 @@ import MinimizeIcon from '@mui/icons-material/Minimize';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import CoffeeIcon from '@mui/icons-material/Coffee';
 import BugReportIcon from '@mui/icons-material/BugReport';
+import TableChartIcon from '@mui/icons-material/TableChart';
+import PayTableModal from '@/components/PayTableModal';
 import {useColorMode} from "@/context/ThemeModeProvider";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import EditableGradeTable from "@/components/EditableGradeTable";
@@ -133,6 +135,7 @@ const getShortPrintRetirementTypeFromValue = (value) => {
 
 export default function Sidebar({ children }) {
     const { mode, toggleMode } = useColorMode();
+    const [openPayTableModal, setOpenPayTableModal] = React.useState(false);
 
     const {
         sidebarOpen,
@@ -181,6 +184,12 @@ export default function Sidebar({ children }) {
                         US Military Retirement Calculator
                     </Typography>
 
+                    <Tooltip title="View Reference Basic Pay Table" placement="bottom" arrow>
+                        <IconButton onClick={() => setOpenPayTableModal(true)} color="inherit" sx={{ mr: 1 }}>
+                            <TableChartIcon />
+                        </IconButton>
+                    </Tooltip>
+
                     <IconButton onClick={toggleMode} color="inherit">
                         {mode === 'light' ? <Brightness4Icon /> : <Brightness7Icon />}
                     </IconButton>
@@ -189,7 +198,7 @@ export default function Sidebar({ children }) {
 
             <Drawer variant="permanent" open={sidebarOpen}>
                 <DrawerHeader sx={{mx: 1}}>
-                    <Box flexGrow={1}>
+                    <Box sx={{ flexGrow: 1 }}>
                         <Tooltip title="View project on GitHub" placement="top-start" arrow>
                             <IconButton href="https://github.com/danvanbueren" target="_blank" rel="noopener noreferrer">
                                 <GitHubIcon/>
@@ -219,12 +228,12 @@ export default function Sidebar({ children }) {
                 <Divider />
 
                 { sidebarOpen &&
-                    <Box sx={{ mx: 2.5, my: 3, minWidth: 120 }} display={'flex'} flexDirection={'column'} gap={2}>
+                    <Box sx={{ mx: 2.5, my: 3, minWidth: 120, display: 'flex', flexDirection: 'column', gap: 2 }}>
                         <Typography variant="h6" sx={{ fontWeight: "bold", minWidth: 0, whiteSpace: 'normal', overflowWrap: 'anywhere', pb: 1}}>
                             App Settings
                         </Typography>
 
-                        <FormControl>
+                        <FormControl fullWidth>
                             <InputLabel id="color-mode-theme-label">Color Mode Theme</InputLabel>
                             <Select
                                 labelId="color-mode-theme-label"
@@ -241,7 +250,7 @@ export default function Sidebar({ children }) {
                             </Select>
                         </FormControl>
 
-                        <FormControl>
+                        <FormControl fullWidth>
                             <InputLabel id="service-localization-label">Service Localization</InputLabel>
                             <Select
                                 labelId="service-localization-label"
@@ -259,7 +268,7 @@ export default function Sidebar({ children }) {
                             </Select>
                         </FormControl>
 
-                        <FormControl>
+                        <FormControl fullWidth>
                             <InputLabel id="retirement-type-label">Retirement Type</InputLabel>
                             <Select
                                 labelId="retirement-type-label"
@@ -320,13 +329,21 @@ export default function Sidebar({ children }) {
                                 <Avatar
                                     variant="square"
                                     alt={p.grade}
+                                    slotProps={{
+                                        img: {
+                                            draggable: false,
+                                        }
+                                    }}
                                     sx={{
                                         fontWeight: "bold",
                                         fontSize: "1rem",
+                                        userSelect: 'none',
                                         '& .MuiAvatar-img': {
                                             objectFit: 'contain',
                                             width: '100%',
                                             height: '100%',
+                                            userSelect: 'none',
+                                            WebkitUserDrag: 'none',
                                         },
                                     }}
                                     src={getRankInsigniaUrl(p.grade)}
@@ -345,6 +362,11 @@ export default function Sidebar({ children }) {
                 <DrawerHeader />
                 { children }
             </Box>
+
+            <PayTableModal
+                open={openPayTableModal}
+                onClose={() => setOpenPayTableModal(false)}
+            />
         </Box>
     );
 }

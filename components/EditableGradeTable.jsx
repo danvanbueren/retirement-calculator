@@ -10,6 +10,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import AddIcon from "@mui/icons-material/Add";
+import { formatDateShort } from '@/lib/payLogic';
 
 const GRADE_OPTIONS = [
     'E-1','E-2','E-3','E-4','E-5','E-6','E-7','E-8','E-9',
@@ -27,9 +28,25 @@ const newId = (() => {
 })();
 
 // --- helpers ---
+const parseToDate = (val) => {
+    if (!val) return null;
+    if (val instanceof Date) return isNaN(val.getTime()) ? null : val;
+    if (typeof val === 'string') {
+        const str = val.slice(0, 10);
+        const parts = str.split('-').map(Number);
+        if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+            return new Date(parts[0], parts[1] - 1, parts[2] || 1);
+        }
+        const d = new Date(val);
+        return isNaN(d.getTime()) ? null : d;
+    }
+    return null;
+};
+
 const ymd = (d) => {
     if (!d) return null;
-    const dt = (d instanceof Date) ? d : new Date(d);
+    const dt = parseToDate(d);
+    if (!dt) return null;
     return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
 };
 
@@ -39,8 +56,8 @@ const sortByDateAsc = (arr) => {
         if (!a.date && !b.date) return 0;
         if (!a.date) return 1;
         if (!b.date) return -1;
-        const aa = new Date(a.date).setHours(0,0,0,0);
-        const bb = new Date(b.date).setHours(0,0,0,0);
+        const aa = parseToDate(a.date)?.getTime() ?? 0;
+        const bb = parseToDate(b.date)?.getTime() ?? 0;
         return aa - bb;
     });
     return copy;
@@ -60,7 +77,7 @@ function Row({ row, draft, isEditing, onStartEdit, onChangeDraft, onSaveEdit, on
                 {isEditing ? (
                     <DatePicker
                         label="Date"
-                        value={draft?.date ?? null}
+                        value={parseToDate(draft?.date)}
                         onChange={(v) => onChangeDraft(row.id, { date: v })}
                         slotProps={{
                             textField: {
@@ -74,7 +91,7 @@ function Row({ row, draft, isEditing, onStartEdit, onChangeDraft, onSaveEdit, on
                     />
                 ) : (
                     <Typography variant="body2">
-                        {row.date ? new Date(row.date).toLocaleDateString() : '—'}
+                        {row.date ? formatDateShort(row.date) : '—'}
                     </Typography>
                 )}
             </TableCell>
@@ -89,7 +106,7 @@ function Row({ row, draft, isEditing, onStartEdit, onChangeDraft, onSaveEdit, on
                             label="Grade"
                             value={draft?.grade ?? ''}
                             onChange={(e) => onChangeDraft(row.id, { grade: e.target.value })}
-                            MenuProps={{ PaperProps: { style: { maxHeight: 300 } } }}
+                            slotProps={{ paper: { style: { maxHeight: 300 } } }}
                             sx={{ width: '6rem' }}
                         >
                             {GRADE_OPTIONS.map(g => <MenuItem key={g} value={g}>{g}</MenuItem>)}
@@ -104,7 +121,7 @@ function Row({ row, draft, isEditing, onStartEdit, onChangeDraft, onSaveEdit, on
             {/* Actions */}
             <TableCell align="right" onClick={(e) => e.stopPropagation()} sx={{ px: 0, mx: 0 }}>
                 {isEditing ? (
-                    <Box display="flex" flexDirection="column" alignItems="flex-end">
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                         <IconButton size="small" color="success" onClick={() => onSaveEdit(row.id)} aria-label="save row">
                             <CheckCircleIcon />
                         </IconButton>
@@ -178,14 +195,16 @@ export default function EditableGradeTable({ rows, onRowsChange }) {
             return false;
         }
 
+        const finalDate = draft.date instanceof Date ? ymd(draft.date) : (draft.date || null);
+
         let next;
         if (editingId === pendingId) {
             // Add new (now valid) row
-            next = sortByDateAsc([...rows, { id: editingId, date: draft.date, grade: draft.grade }]);
+            next = sortByDateAsc([...rows, { id: editingId, date: finalDate, grade: draft.grade }]);
             setPendingId(null);
         } else {
             // Update existing row
-            next = sortByDateAsc(rows.map(r => r.id === editingId ? { ...r, date: draft.date, grade: draft.grade } : r));
+            next = sortByDateAsc(rows.map(r => r.id === editingId ? { ...r, date: finalDate, grade: draft.grade } : r));
         }
         onRowsChange(next);
 
@@ -202,7 +221,8 @@ export default function EditableGradeTable({ rows, onRowsChange }) {
             if (!ok) return; // block switching if invalid
         }
         const r = rows.find(x => x.id === id) || (id === pendingId ? { id, date: null, grade: '' } : null);
-        setDrafts(d => ({ ...d, [id]: { date: r?.date ?? null, grade: r?.grade ?? '' } }));
+        const parsedDate = parseToDate(r?.date);
+        setDrafts(d => ({ ...d, [id]: { date: parsedDate, grade: r?.grade ?? '' } }));
         setErrors(e => ({ ...e, [id]: {} }));
         setEditingId(id);
     };
@@ -242,7 +262,7 @@ export default function EditableGradeTable({ rows, onRowsChange }) {
     return (
         <LocalizationProvider dateAdapter={AdapterDateFns}>
             <Paper elevation={3}>
-                <Box py={2} px={1}>
+                <Box sx={{ py: 2, px: 1 }}>
                     <TableContainer>
                         <Table size="small" aria-label="editable grade table">
                             <TableBody>
@@ -261,10 +281,10 @@ export default function EditableGradeTable({ rows, onRowsChange }) {
                                     />
                                 ))}
 
-                                {rows.length === 0 && !pendingId && (
+                                 {rows.length === 0 && !pendingId && (
                                     <TableRow>
                                         <TableCell colSpan={3}>
-                                            <Typography variant="body2" color="text.secondary" sx={{ display: "flex", justifySelf: "center", pt: 1, pb: 2 }}>
+                                            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', pt: 1, pb: 2 }}>
                                                 Add at least two promotions to get started!
                                             </Typography>
                                         </TableCell>
@@ -274,7 +294,7 @@ export default function EditableGradeTable({ rows, onRowsChange }) {
                                 {rows.length === 1 && !pendingId && (
                                     <TableRow>
                                         <TableCell colSpan={3}>
-                                            <Typography variant="body2" color="text.secondary" sx={{ display: "flex", justifySelf: "center", py: 2 }}>
+                                            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
                                                 Add at least one more promotion to get started!
                                             </Typography>
                                         </TableCell>
@@ -284,8 +304,8 @@ export default function EditableGradeTable({ rows, onRowsChange }) {
                         </Table>
                     </TableContainer>
 
-                    <Box display="flex" justifyContent="center" mt={2}>
-                        <IconButton variant="contained" size="small" onClick={addRow} disabled={Boolean(editingId)}><AddIcon/></IconButton>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                        <IconButton color="primary" size="small" onClick={addRow} disabled={Boolean(editingId)}><AddIcon/></IconButton>
                     </Box>
                 </Box>
             </Paper>
